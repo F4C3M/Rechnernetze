@@ -19,3 +19,5 @@ public class MessageCodec {
         return encoded;
     }
 }
+
+// Ich schreib das nur um was zu testen ihr Stinka
