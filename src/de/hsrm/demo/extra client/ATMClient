@@ -1,0 +1,52 @@
+package de.hsrm.demo.coded;
+
+import java.io.*;
+import java.net.*;
+
+
+public class ATMClient {
+    private final String host;
+    private final int port;
+
+    public ATMClient(String host, int port) {
+        this.host = host;
+        this.port = port;
+    }
+
+    public void run() throws IOException {
+        Socket socket = new Socket(host, port);
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+
+        /* Actor will sich anmelden */
+        LoginMessage logMsg = new LoginMessage("user1", "geheim");
+        out.write(login.serialize() + "\n");
+        out.flush();
+        System.out.println("Server: " + in.readLine());
+
+        /* Actor fragt Kontostnad ab */
+        KontostandMessage kontoMsg = new KontostandMessage("123456", -1.0);
+        out.write(ks.serialize() + "\n");
+        out.flush();
+        System.out.println("Server: " + in.readLine());
+
+        /* Actor will Geld abheben */
+        AbhebenMessage abhebenMsg = new AbhebenMessage("123456", 100.0);
+        out.write(abheben.serialize() + "\n");
+        out.flush();
+        System.out.println("Server: " + in.readLine()); // Hinweis
+        System.out.println("Server: " + in.readLine()); // Erfolg
+
+        /* Actor sendet dem Server einen Text */
+        TextMessage textMsg = new TextMessage("Danke für Ihre Hilfe!");
+        out.write(text.serialize() + "\n");
+        out.flush();
+        System.out.println("Server: " + in.readLine());
+
+        socket.close();
+    }
+
+    public static void main(String[] args) throws IOException {
+        new ATMClient("localhost", 5001).run();
+    }
+}
