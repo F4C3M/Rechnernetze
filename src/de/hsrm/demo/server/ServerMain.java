@@ -1,6 +1,5 @@
 package de.hsrm.demo.server;
-
-import de.hsrm.demo.coded.MessageCodec;
+import de.hsrm.demo.coded.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -8,6 +7,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Einfacher TCP-Server:
@@ -17,34 +19,97 @@ import java.net.Socket;
  *  - sendet eine Antwort zurück
  */
 public class ServerMain {
-
     public static final int PORT = 5001;
+
+    /* Eine kleine Hashmap damit wir Kontos simuliern können*/
+    private static final Map<String, Double> kontoMap = new HashMap<>();
+    static {
+        kontoMap.put("Bob der Knechter", 5200.00);
+        kontoMap.put("Marvin der Große", 1200.50);
+        kontoMap.put("Toma die arme Wurst", 12.35);
+        kontoMap.put("Denys der heimlichreiche", 70000.00);
+        kontoMap.put("Marcelino der Stadionist", 3333.33);
+        kontoMap.put("Melisana die Blume", 777.77);
+    }
+
 
     public static void main(String[] args) {
         System.out.println("Server startet auf Port " + PORT + " ...");
 
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("Warte auf Verbindung...");
-            try (Socket clientSocket = serverSocket.accept();
-                 BufferedReader in = new BufferedReader(
-                         new InputStreamReader(clientSocket.getInputStream()));
-                 PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
 
-                System.out.println("Client verbunden: " + clientSocket.getRemoteSocketAddress());
+            
+            /**/
+            while(true) {
+                try (Socket clientSocket = serverSocket.accept();
+                    BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                    PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
 
-                String line = in.readLine(); // eine Zeile empfangen
-                System.out.println("Roh empfangen: " + line);
+                    System.out.println("Client verbunden: " + clientSocket.getRemoteSocketAddress());
+                    String line;
 
-                String decoded = MessageCodec.decode(line);
-                System.out.println("Dekodiert: " + decoded);
+                    while((line = in.readLine()) != null) {
+                        Message msg = MessageCodec.decode(line);
+                        
+                        if (msg == null) {
+                            out.println(MessageCodec.encode(new ErrorMessage("Ungültige Nachricht.")));
+                            continue;
+                        }
 
-                String response = "Hallo Client, ich habe deine Nachricht erhalten: " + decoded;
-                String encodedResponse = MessageCodec.encode(response);
-                out.println(encodedResponse);
-                System.out.println("Antwort gesendet: " + encodedResponse);
+                        switch (msg.getType()) {
 
+                            case TEXTITEXT -> { 
+                            TextMessage textMsg = (TextMessage) msg;
+                            System.out.println("Text empfangen: " + textMsg.getContent());
+                            out.println(MessageCodec.encode(new TextMessage("Server hat empfangen: " + textMsg.getContent())));
+                            }
+
+                            case LOGIN -> {
+                                LoginMessage logMsg = (LoginMessage) msg;
+                                System.out.println("Login-Versuch von " + logMsg.getUsername());
+                                if ("alice".equalsIgnoreCase(logMsg.getUsername()) && "1234".equals(logMsg.getPassword())) {
+                                    out.println(MessageCodec.encode(new TextMessage("Login erfolgreich, Willkommen " + logMsg.getUsername() + "!")));
+                                } else {
+                                    out.println(MessageCodec.encode(new ErrorMessage("Login fehlgeschlagen!")));
+                                }
+                            }
+
+                            case KONTOSTAND -> {
+                                KontostandMessage kontoMsg = (KontostandMessage) msg;
+                                Double stand = kontoMap.get(kontoMsg.getKontonummer());
+                                if (stand != null) {
+                                    out.println(MessageCodec.encode(new KontostandMessage(kontoMsg.getKontonummer(), stand)));
+                                } else {
+                                    out.println(MessageCodec.encode(new ErrorMessage("Konto nicht gefunden.")));
+                                }
+                            }
+
+                            case ABHEBEN -> {
+                                AbhebenMessage abhebenMsg = (AbhebenMessage) msg;
+                                Double stand = kontoMap.get(abhebenMsg.getKontonummer());
+                                if (stand == null) {
+                                    out.println(MessageCodec.encode(new ErrorMessage("Konto existiert nicht.")));
+                                } else if (stand >= abhebenMsg.getBetrag()) {
+                                    kontoMap.put(abhebenMsg.getKontonummer(), stand - abhebenMsg.getBetrag());
+                                    out.println(MessageCodec.encode(new TextMessage("Abhebung erfolgreich. Neuer Kontostand: " + kontoMap.get(abhebenMsg.getKontonummer()))));
+                                } else {
+                                    out.println(MessageCodec.encode(new ErrorMessage("Nicht genug Guthaben.")));
+                                }
+                            }
+
+                            case ERRORS -> {
+                                ErrorMessage errMsg = (ErrorMessage) msg;
+                                System.err.println("Fehlermeldung vom Client: " + errMsg.getFehlertext());
+                            }
+
+                            default -> out.println(MessageCodec.encode(new ErrorMessage("Unbekannter Nachrichtentyp!")));
+                        }
+                    }   
+                } catch (IOException e) {
+                    System.out.println("Fehler mit dem Client: " + e.getMessage());
+                }
             }
-            System.out.println("Server beendet Verbindung und fährt runter.");
         } catch (IOException e) {
             e.printStackTrace();
         }
