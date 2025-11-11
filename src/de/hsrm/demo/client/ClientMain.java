@@ -1,7 +1,5 @@
 package de.hsrm.demo.client;
-
 import de.hsrm.demo.coded.*;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -15,7 +13,7 @@ import java.net.Socket;
  *  - empfängt die Antwort und dekodiert sie
  */
 public class ClientMain {
-
+    
     public static void main(String[] args) {
         String host = "localhost";
         int port = 5001;
@@ -28,46 +26,26 @@ public class ClientMain {
                 
                 System.out.println("Verbunden mit " + host + ":" + port);
 
-
                 // Login Test
-                Message login = new LoginMessage("alice", "1234");
-                out.println(MessageCodec.encode(login));
+                Message logMsg = new LoginMessage("alice", "1234");
+                out.println(MessageCodec.encode(logMsg));
                 System.out.println("Antwort: " + MessageCodec.decode(in.readLine()));
 
                 // Test Kontostandabfrage
-                Message konto = new KontostandMessage("alice", -1.0);
-                out.println(MessageCodec.encode(konto));
+                Message kontoMsg = new KontostandMessage("alice", -1.0);
+                out.println(MessageCodec.encode(kontoMsg));
                 System.out.println("Antwort: " + MessageCodec.decode(in.readLine()));
 
                 // Testitest zum Abheben
-                Message abheben = new AbhebenMessage("alice", 200.0);
-                out.println(MessageCodec.encode(abheben));
+                Message abhebenMsg = new AbhebenMessage("alice", 200.0);
+                out.println(MessageCodec.encode(abhebenMsg));
                 System.out.println("Antwort: " + MessageCodec.decode(in.readLine()));
 
                 // Normaler Text Test
-                Message text = new TextMessage("Hallo, ich bin Alice!");
-                out.println(MessageCodec.encode(text));
+                Message textMsg = new TextMessage("Hallo, ich bin Alice!");
+                out.println(MessageCodec.encode(textMsg));
                 System.out.println("Antwort: " + MessageCodec.decode(in.readLine()));
 
-
-                
-                /* erstellen der Message */
-                // Message msg = new TextMessage("Hallo Server, hier ist der Client!");
-                /* codieren der Message */
-                // String encoded = MessageCodec.encode(msg);
-                // System.out.println("Sende kodiert: " + encoded);
-                /* senden der Message */
-                // out.println(encoded);
-                /* Antwort empfangen*/
-                // String reply = in.readLine();
-                // System.out.println("Roh empfangen: " + reply);
-                /* decodieren der Message */
-                // Message decodedReply = MessageCodec.decode(reply);
-                // if (decodedReply instanceof TextMessage textReply) {
-                //    System.out.println("Dekodierte Antwort: " + textReply.getContent());
-                // } else {
-                //    System.out.println("Antwort ist keine TextMessage!");
-                // }
             } catch (IOException e) {
             e.printStackTrace();
         }

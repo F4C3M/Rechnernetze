@@ -5,25 +5,25 @@ package de.hsrm.demo.coded;
 */
 public class KontostandMessage extends Message {
     private final String kontonummer;
-    private final double betrag; // -1.0 = Anfrage, >= 0 = Antwort
+    private final double kontostandBetrag;
 
-    public KontostandMessage(String kontonummer, double betrag) {
+    public KontostandMessage(String kontonummer, double kontostandBetrag) {
         super(MessageType.KONTOSTAND);
         this.kontonummer = kontonummer;
-        this.betrag = betrag;
+        this.kontostandBetrag = kontostandBetrag;
     }
 
     public String getKontonummer() {
         return kontonummer;
     }
 
-    public double getBetrag() {
-        return betrag;
+    public double getKontostandBetrag() {
+        return kontostandBetrag;
     }
 
     @Override
     public String serialize() {
-        return getType() + "|" + kontonummer + "|" + betrag;
+        return getType() + "|" + kontonummer + "|" + kontostandBetrag;
     }
 
     public static KontostandMessage deserialize(String data) {

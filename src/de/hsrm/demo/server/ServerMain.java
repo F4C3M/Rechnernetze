@@ -1,13 +1,11 @@
 package de.hsrm.demo.server;
 import de.hsrm.demo.coded.*;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +19,6 @@ import java.util.Map;
 public class ServerMain {
     public static final int PORT = 5001;
 
-    /* Eine kleine Hashmap damit wir Kontos simuliern können*/
     private static final Map<String, Double> kontoMap = new HashMap<>();
     static {
         kontoMap.put("Bob der Knechter", 5200.00);
@@ -39,8 +36,6 @@ public class ServerMain {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("Warte auf Verbindung...");
 
-            
-            /**/
             while(true) {
                 try (Socket clientSocket = serverSocket.accept();
                     BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -58,52 +53,52 @@ public class ServerMain {
                         }
 
                         switch (msg.getType()) {
+                            case TEXTITEXT:
+                                TextMessage textMsg = (TextMessage) msg;
+                                System.out.println("Text empfangen: " + textMsg.getContent());
+                                out.println(MessageCodec.encode(new TextMessage("Server hat empfangen: " + textMsg.getContent())));
+                                break;
 
-                            case TEXTITEXT -> { 
-                            TextMessage textMsg = (TextMessage) msg;
-                            System.out.println("Text empfangen: " + textMsg.getContent());
-                            out.println(MessageCodec.encode(new TextMessage("Server hat empfangen: " + textMsg.getContent())));
-                            }
-
-                            case LOGIN -> {
+                            case LOGIN:
                                 LoginMessage logMsg = (LoginMessage) msg;
                                 System.out.println("Login-Versuch von " + logMsg.getUsername());
-                                if ("alice".equalsIgnoreCase(logMsg.getUsername()) && "1234".equals(logMsg.getPassword())) {
+                                if ("alice".equalsIgnoreCase(logMsg.getUsername()) && "1234".equals(logMsg.getKontoPin())) {
                                     out.println(MessageCodec.encode(new TextMessage("Login erfolgreich, Willkommen " + logMsg.getUsername() + "!")));
                                 } else {
                                     out.println(MessageCodec.encode(new ErrorMessage("Login fehlgeschlagen!")));
                                 }
-                            }
+                                break;
 
-                            case KONTOSTAND -> {
+                            case KONTOSTAND:
                                 KontostandMessage kontoMsg = (KontostandMessage) msg;
-                                Double stand = kontoMap.get(kontoMsg.getKontonummer());
-                                if (stand != null) {
-                                    out.println(MessageCodec.encode(new KontostandMessage(kontoMsg.getKontonummer(), stand)));
+                                Double kontostand = kontoMap.get(kontoMsg.getKontonummer());
+                                if (kontostand != null) {
+                                    out.println(MessageCodec.encode(new KontostandMessage(kontoMsg.getKontonummer(), kontostand)));
                                 } else {
                                     out.println(MessageCodec.encode(new ErrorMessage("Konto nicht gefunden.")));
                                 }
-                            }
+                                break;
 
-                            case ABHEBEN -> {
+                            case ABHEBEN:
                                 AbhebenMessage abhebenMsg = (AbhebenMessage) msg;
-                                Double stand = kontoMap.get(abhebenMsg.getKontonummer());
-                                if (stand == null) {
+                                Double betrag = kontoMap.get(abhebenMsg.getKontonummer());
+                                if (betrag == null) {
                                     out.println(MessageCodec.encode(new ErrorMessage("Konto existiert nicht.")));
-                                } else if (stand >= abhebenMsg.getBetrag()) {
-                                    kontoMap.put(abhebenMsg.getKontonummer(), stand - abhebenMsg.getBetrag());
+                                } else if (betrag >= abhebenMsg.getAbhebeBetrag()) {
+                                    kontoMap.put(abhebenMsg.getKontonummer(), betrag - abhebenMsg.getAbhebeBetrag());
                                     out.println(MessageCodec.encode(new TextMessage("Abhebung erfolgreich. Neuer Kontostand: " + kontoMap.get(abhebenMsg.getKontonummer()))));
                                 } else {
                                     out.println(MessageCodec.encode(new ErrorMessage("Nicht genug Guthaben.")));
                                 }
-                            }
+                                break;
 
-                            case ERRORS -> {
+                            case ERRORS:
                                 ErrorMessage errMsg = (ErrorMessage) msg;
                                 System.err.println("Fehlermeldung vom Client: " + errMsg.getFehlertext());
-                            }
+                                break;
 
-                            default -> out.println(MessageCodec.encode(new ErrorMessage("Unbekannter Nachrichtentyp!")));
+                            default:
+                                out.println(MessageCodec.encode(new ErrorMessage("Unbekannter Nachrichtentyp!")));
                         }
                     }   
                 } catch (IOException e) {

@@ -1,29 +1,29 @@
 package de.hsrm.demo.coded;
 
-/* Vierte Klasse ... für die Message
- * zum Abheben.
+/* Vierte Klasse dazu da, dass wir 
+ * das "Abheben" simulieren können.
 */
 public class AbhebenMessage extends Message {
     private final String kontonummer;
-    private final double betrag;
+    private final double abhebeBetrag;
 
-    public AbhebenMessage(String kontonummer, double betrag) {
+    public AbhebenMessage(String kontonummer, double abhebeBetrag) {
         super(MessageType.ABHEBEN);
         this.kontonummer = kontonummer;
-        this.betrag = betrag;
+        this.abhebeBetrag = abhebeBetrag;
     }
 
     public String getKontonummer() {
         return kontonummer;
     }
 
-    public double getBetrag() {
-        return betrag;
+    public double getAbhebeBetrag() {
+        return abhebeBetrag;
     }
 
     @Override
     public String serialize() {
-        return getType() + "|" + kontonummer + "|" + betrag;
+        return getType() + "|" + kontonummer + "|" + abhebeBetrag;
     }
 
     public static AbhebenMessage deserialize(String data) {

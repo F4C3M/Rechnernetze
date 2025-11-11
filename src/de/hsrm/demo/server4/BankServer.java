@@ -1,7 +1,8 @@
 package de.hsrm.demo.server4;
-
 import java.io.*;
 import java.net.*;
+import java.util.HashMap;
+import java.util.Map;
 import de.hsrm.demo.coded.*;
 
 
@@ -11,17 +12,45 @@ public class BankServer {
     public BankServer(int port) {
         this.port = port;
     }
+    
+    static class UserAccount {
+        String username;
+        String kontoPin;
+        String kontonummer;
+        double kontostand;
+        UserStatus status;
+
+        UserAccount(String username, String kontoPin, String kontonummer, double kontostand) {
+            this.username = username;
+            this.kontoPin = kontoPin;
+            this.kontonummer = kontonummer;
+            this.kontostand = kontostand;
+            this.status = UserStatus.LOGGED_OUT;
+        }
+    }
+
+
+    private final Map<String, UserAccount> users = new HashMap<>();
+
+    private void initUsers() {
+        users.put("user1", new UserAccount("Dennel", "1277", "722_586", 218.0));
+        users.put("user2", new UserAccount("Jamamoto", "1706", "234_886", 25370.43));
+    }
+
 
     public void start() throws IOException {
+        initUsers();
+
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Der Bankserver läuft auf dem Port " + port);
 
             while (true) {
                 try (Socket clientSocket = serverSocket.accept()) {
-                    System.out.println("Ein neuer Klient wird verbunden: " + clientSocket.getInetAddress());
+                    System.out.println("Klient wird verbunden: " + clientSocket.getInetAddress());
 
                     BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                     BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+                    UserAccount currentUser = null;
 
                     String line;
                     while ((line = in.readLine()) != null) {
@@ -29,35 +58,62 @@ public class BankServer {
 
                         switch (msg.getType()) {
                             case LOGIN:
-                                LoginMessage logMsg = (LoginMessage) msg;
-                                System.out.println("Login-Anfrage: " + logMsg.getUsername());
-                                out.write(new TextMessage("OK").serialize() + "\n");
-                                out.flush();
+                                LoginMessage loginMsg = (LoginMessage) msg;
+                                currentUser = users.get(loginMsg.getUsername());
+
+                                if (currentUser == null || !currentUser.kontoPin.equals(loginMsg.getKontoPin())) {
+                                    out.write(new ErrorMessage("Login ist fehlgeschlagen. PIN falsch").serialize() + "\n");
+                                    out.flush();
+                                    currentUser = null;
+                                } else if (currentUser.status == UserStatus.BLOCKED) {
+                                    out.write(new ErrorMessage("Account ist gesperrt").serialize() + "\n");
+                                    out.flush();
+                                    currentUser = null;
+                                } else {
+                                    currentUser.status = UserStatus.LOGGED_IN;
+                                    out.write(new TextMessage("OK").serialize() + "\n");
+                                    out.flush();
+                                }
                                 break;
-                            
+
                             case KONTOSTAND:
+                                if (currentUser == null || currentUser.status != UserStatus.LOGGED_IN) {
+                                    out.write(new ErrorMessage("Sie müssen sich einloggen.").serialize() + "\n");
+                                    out.flush();
+                                    break;
+                                }
                                 KontostandMessage kontoMsg = (KontostandMessage) msg;
-                                System.out.println("Kontostand-Anfrage für: " + kontoMsg.getKontonummer());
-                                out.write(new KontostandMessage(kontoMsg.getKontonummer(), 1234.56).serialize() + "\n");
+                                out.write(new KontostandMessage(kontoMsg.getKontonummer(), currentUser.kontostand).serialize() + "\n");
                                 out.flush();
                                 break;
-                            
+
                             case ABHEBEN:
+                                if (currentUser == null || currentUser.status != UserStatus.LOGGED_IN) {
+                                    out.write(new ErrorMessage("Sie müssen sich einloggen.").serialize() + "\n");
+                                    out.flush();
+                                    break;
+                                }
                                 AbhebenMessage abhebenMsg = (AbhebenMessage) msg;
-                                System.out.println("Abhebungsanfrage: " + abhebenMsg.getBetrag() + " von " + abhebenMsg.getKontonummer());
-                                out.write(new TextMessage("Bitte entnehmen Sie Ihr Geld").serialize() + "\n");
-                                out.flush();
-                                out.write(new TextMessage("Abhebung erfolgreich").serialize() + "\n");
-                                out.flush();
+                                double betrag = abhebenMsg.getAbhebeBetrag();
+                                if (betrag > currentUser.kontostand) {
+                                    out.write(new ErrorMessage("Sie haben zu wenig Guthaben").serialize() + "\n");
+                                    out.flush();
+                                } else {
+                                    currentUser.kontostand -= betrag;
+                                    out.write(new TextMessage("Bitte entnehmen Sie Ihr Geld.").serialize() + "\n");
+                                    out.flush();
+                                    out.write(new TextMessage("Abhebung: " + betrag).serialize() + "\n");
+                                    out.flush();
+                                }
                                 break;
-                            
+
                             case TEXTITEXT:
                                 TextMessage textMsg = (TextMessage) msg;
                                 System.out.println("Textnachricht vom Client: " + textMsg.getContent());
                                 out.write(new TextMessage("Server hat die Nachricht erhalten").serialize() + "\n");
                                 out.flush();
                                 break;
-                            
+
                             default:
                                 out.write(new ErrorMessage("Unbekannter Nachrichttyp").serialize() + "\n");
                                 out.flush();
@@ -68,7 +124,6 @@ public class BankServer {
             }
         }
     }
-
 
     public static void main(String[] args) throws IOException {
         new BankServer(5001).start();
