@@ -18,4 +18,5 @@ public abstract class Message implements Serializable{
 
     /* Methode damti zum selbst defini. der Umwandlung*/
     public abstract String serialize();
+    public abstract String deserialize();
 }

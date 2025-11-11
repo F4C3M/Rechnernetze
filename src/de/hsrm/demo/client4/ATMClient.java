@@ -1,7 +1,8 @@
-package de.hsrm.demo.coded;
+package de.hsrm.demo.client4;
 
 import java.io.*;
 import java.net.*;
+import de.hsrm.demo.coded.*;
 
 
 public class ATMClient {
@@ -20,26 +21,26 @@ public class ATMClient {
 
         /* Actor will sich anmelden */
         LoginMessage logMsg = new LoginMessage("user1", "geheim");
-        out.write(login.serialize() + "\n");
+        out.write(logMsg.serialize() + "\n");
         out.flush();
         System.out.println("Server: " + in.readLine());
 
         /* Actor fragt Kontostnad ab */
         KontostandMessage kontoMsg = new KontostandMessage("123456", -1.0);
-        out.write(ks.serialize() + "\n");
+        out.write(kontoMsg.serialize() + "\n");
         out.flush();
         System.out.println("Server: " + in.readLine());
 
         /* Actor will Geld abheben */
         AbhebenMessage abhebenMsg = new AbhebenMessage("123456", 100.0);
-        out.write(abheben.serialize() + "\n");
+        out.write(abhebenMsg.serialize() + "\n");
         out.flush();
         System.out.println("Server: " + in.readLine()); // Hinweis
         System.out.println("Server: " + in.readLine()); // Erfolg
 
         /* Actor sendet dem Server einen Text */
         TextMessage textMsg = new TextMessage("Danke für Ihre Hilfe!");
-        out.write(text.serialize() + "\n");
+        out.write(textMsg.serialize() + "\n");
         out.flush();
         System.out.println("Server: " + in.readLine());
 

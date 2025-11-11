@@ -1,7 +1,8 @@
-package de.hsrm.demo.coded;
+package de.hsrm.demo.server4;
 
 import java.io.*;
 import java.net.*;
+import de.hsrm.demo.coded.*;
 
 
 public class BankServer {
@@ -29,25 +30,25 @@ public class BankServer {
                 switch (msg.getType()) {
                     case LOGIN -> {
                         LoginMessage logMsg = (LoginMessage) msg;
-                        System.out.println("Login-Anfrage: " + login.getUsername());
+                        System.out.println("Login-Anfrage: " + logMsg.getUsername());
                         out.write(new TextMessage("OK").serialize() + "\n");
                         out.flush();
                     }
                     case KONTOSTAND -> {
                         KontostandMessage kontoMsg = (KontostandMessage) msg;
-                        System.out.println("Kontostand-Anfrage für: " + ks.getKontonummer());
-                        out.write(new KontostandMessage(ks.getKontonummer(), 1234.56).serialize() + "\n");
+                        System.out.println("Kontostand-Anfrage für: " + kontoMsg.getKontonummer());
+                        out.write(new KontostandMessage(kontoMsg.getKontonummer(), 1234.56).serialize() + "\n");
                         out.flush();
                     }
                     case ABHEBEN -> {
                         AbhebenMessage abhebenMsg = (AbhebenMessage) msg;
-                        System.out.println("Abhebungsanfrage: " + abheben.getBetrag() + " von " + abheben.getKontonummer());
+                        System.out.println("Abhebungsanfrage: " + abhebenMsg.getBetrag() + " von " + abhebenMsg.getKontonummer());
                         out.write(new TextMessage("Bitte entnehmen Sie Ihr Geld").serialize() + "\n").flush();
                         out.write(new TextMessage("Abhebung erfolgreich").serialize() + "\n").flush();
                     }
                     case TEXTITEXT -> {
                         TextMessage textMsg = (TextMessage) msg;
-                        System.out.println("Textnachricht vom Client: " + text.getContent());
+                        System.out.println("Textnachricht vom Client: " + textMsg.getContent());
                         out.write(new TextMessage("Server hat die Nachricht erhalten").serialize() + "\n");
                         out.flush();
                     }
