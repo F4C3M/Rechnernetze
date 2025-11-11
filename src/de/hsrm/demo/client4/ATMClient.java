@@ -21,7 +21,7 @@ public class ATMClient {
 
         /* Actor will sich anmelden */
         LoginMessage logMsg = new LoginMessage("user1", "geheim");
-        out.write(logMsg.serialize() + "\n");
+        out.write(MessageCodec.encode(logMsg) + "\n");
         out.flush();
         System.out.println("Server: " + in.readLine());
 
