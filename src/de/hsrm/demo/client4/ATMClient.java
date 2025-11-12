@@ -47,6 +47,6 @@ public class ATMClient {
     }
 
     public static void main(String[] args) throws IOException {
-        new ATMClient("localhost", 5001).run();
+        new ATMClient("192.168.220.157", 5001).run();
     }
 }
