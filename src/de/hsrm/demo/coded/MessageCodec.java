@@ -1,4 +1,5 @@
 package de.hsrm.demo.coded;
+
 public class MessageCodec {
 
     /* Methode zum "encoden" einer Message */
@@ -9,30 +10,41 @@ public class MessageCodec {
         return "[ENC]" + msg.serialize() + "[/ENC]";
     }
 
-
     /* Methode zum "decoden" einer Message */
     public static Message decode(String encoded) {
-        if (encoded == null || !encoded.startsWith("[ENC]") || !encoded.endsWith("[/ENC]")) {
+        if (encoded == null) {
             return null;
         }
+        String content = encoded;
 
-        String content = encoded.substring(5, encoded.length() - 6);
-        String[] parts = content.split("\\|", 2);
-        MessageType type = MessageType.valueOf(parts[0]);
+        /* Prüfen, ob Nachricht in [ENC] ist */
+        if (encoded.startsWith("[ENC]") && encoded.endsWith("[/ENC]")) {
+            content = encoded.substring(5, encoded.length() - 6);
+        }
 
-        switch (type) {
-            case TEXTITEXT:
-                return TextMessage.deserialize(content);
-            case LOGIN:
-                return LoginMessage.deserialize(content);
-            case KONTOSTAND:
-                return KontostandMessage.deserialize(content);
-            case ABHEBEN:
-                return AbhebenMessage.deserialize(content);
-            case ERRORS:
-                return ErrorMessage.deserialize(content);
-            default:
-                throw new IllegalArgumentException("Unbekannter Nachrichtentyp: " + type);
+        /* Versuche "decodeieren" */
+        try {
+            String[] parts = content.split("\\|", 2);
+            MessageType type = MessageType.valueOf(parts[0]);
+
+            switch (type) {
+                case TEXTITEXT:
+                    return TextMessage.deserialize(content);
+                case LOGIN:
+                    return LoginMessage.deserialize(content);
+                case KONTOSTAND:
+                    return KontostandMessage.deserialize(content);
+                case ABHEBEN:
+                    return AbhebenMessage.deserialize(content);
+                case ERRORS:
+                    return ErrorMessage.deserialize(content);
+                default:
+                    System.err.println("Unbekannter Nachrichtentyp: " + type);
+                    return null;
+            }
+        } catch (Exception e) {
+            System.err.println("Fehler beim Decodieren der Nachricht: " + e.getMessage());
+            return null;
         }
     }
 }

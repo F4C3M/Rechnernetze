@@ -33,10 +33,10 @@ public class BankServer {
     private final Map<String, UserAccount> users = new HashMap<>();
 
     private void initUsers() {
-        users.put("user1", new UserAccount("Dennel", "1277", "722_586", 218.0));
-        users.put("user2", new UserAccount("Jamamoto", "1706", "234_886", 25370.43));
+        users.put("Dennel", new UserAccount("Dennel", "1277", "722_586", 218.0));
+        users.put("Jamamoto", new UserAccount("Jamamoto", "1706", "234_886", 25370.43));
     }
-
+    /* Normalerweise sollten die Keys einer HashMap eindeutig sein, so wie "user1", aber das ist nur zum testen jetzt so */
 
     public void start() throws IOException {
         initUsers();
@@ -54,6 +54,7 @@ public class BankServer {
 
                     String line;
                     while ((line = in.readLine()) != null) {
+                        System.out.println("Empfangen vom Client: " + line);    
                         Message msg = MessageCodec.decode(line);
 
                         switch (msg.getType()) {

@@ -26,22 +26,22 @@ public class ClientMain {
                 
                 System.out.println("Verbunden mit " + host + ":" + port);
 
-                // Login Test
+                /* Login Test */
                 Message logMsg = new LoginMessage("alice", "1234");
                 out.println(MessageCodec.encode(logMsg));
                 System.out.println("Antwort: " + MessageCodec.decode(in.readLine()));
 
-                // Test Kontostandabfrage
+                /* Test Kontostandabfrage */
                 Message kontoMsg = new KontostandMessage("alice", -1.0);
                 out.println(MessageCodec.encode(kontoMsg));
                 System.out.println("Antwort: " + MessageCodec.decode(in.readLine()));
 
-                // Testitest zum Abheben
+                /* Testitest zum Abheben */
                 Message abhebenMsg = new AbhebenMessage("alice", 200.0);
                 out.println(MessageCodec.encode(abhebenMsg));
                 System.out.println("Antwort: " + MessageCodec.decode(in.readLine()));
 
-                // Normaler Text Test
+                /* Normaler Text Test */
                 Message textMsg = new TextMessage("Hallo, ich bin Alice!");
                 out.println(MessageCodec.encode(textMsg));
                 System.out.println("Antwort: " + MessageCodec.decode(in.readLine()));
