@@ -1,4 +1,4 @@
-package de.hsrm.demo.client4;
+package de.hsrm.demo.client;
 import java.io.*;
 import java.net.*;
 import de.hsrm.demo.coded.*;

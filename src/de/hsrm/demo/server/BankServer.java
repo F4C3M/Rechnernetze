@@ -1,4 +1,4 @@
-package de.hsrm.demo.server4;
+package de.hsrm.demo.server;
 import java.io.*;
 import java.net.*;
 import java.util.HashMap;
