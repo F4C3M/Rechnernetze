@@ -83,6 +83,11 @@ public class BankServer {
                                     break;
                                 }
                                 KontostandMessage kontoMsg = (KontostandMessage) msg;
+                                if (!currentUser.kontonummer.equals(kontoMsg.getKontonummer())) {
+                                    out.write(new ErrorMessage("Falsche Kontonummer für diesen Kontoinhaber.").serialize() + "\n");
+                                    out.flush();
+                                    break;
+                                }
                                 out.write(new KontostandMessage(kontoMsg.getKontonummer(), currentUser.kontostand).serialize() + "\n");
                                 out.flush();
                                 break;
@@ -94,6 +99,11 @@ public class BankServer {
                                     break;
                                 }
                                 AbhebenMessage abhebenMsg = (AbhebenMessage) msg;
+                                 if (!currentUser.kontonummer.equals(abhebenMsg.getKontonummer())) {
+                                    out.write(new ErrorMessage("Falsche Kontonummer für diesen Kontoinhaber.").serialize() + "\n");
+                                    out.flush();
+                                    break;
+                                }
                                 double betrag = abhebenMsg.getAbhebeBetrag();
                                 if (betrag > currentUser.kontostand) {
                                     out.write(new ErrorMessage("Sie haben zu wenig Guthaben").serialize() + "\n");
